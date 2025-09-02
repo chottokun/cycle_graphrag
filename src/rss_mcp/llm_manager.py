@@ -1,16 +1,17 @@
-from typing import Dict, Optional, Any
+from typing import Dict, Optional
 
 from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama
-from langchain_openai import AzureChatOpenAI
 
 from .config_manager import ConfigManager
+
 
 class LLMManager:
     """
     Manages the instantiation and caching of LLM clients.
     Follows the Singleton pattern.
     """
+
     _instance: Optional["LLMManager"] = None
     _llms: Dict[str, BaseChatModel] = {}
     _initialized: bool = False
@@ -38,13 +39,12 @@ class LLMManager:
             print(f"Instantiating LLM: {name}")
             config = self.config_manager.get_llm_config(name)
 
-            if config.provider == 'ollama':
+            if config.provider == "ollama":
                 self._llms[name] = ChatOllama(
-                    model=config.model_name,
-                    base_url=config.base_url
+                    model=config.model_name, base_url=config.base_url
                 )
             # Placeholder for future Azure support
-            elif config.provider == 'azure':
+            elif config.provider == "azure":
                 # This part is not fully implemented or tested yet.
                 # It's here to satisfy the test that expects a ValueError.
                 raise ValueError(f"Unsupported LLM provider: {config.provider}")

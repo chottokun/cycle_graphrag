@@ -2,20 +2,24 @@ import tomli
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
+
 @dataclass
 class LLMConfig:
     """Dataclass to hold LLM configuration."""
+
     provider: str
     model_name: Optional[str] = None
     base_url: Optional[str] = None
     # Add other potential fields with default None
     api_key: Optional[str] = None
 
+
 class ConfigManager:
     """
     Manages loading and accessing configuration from a TOML file.
     Follows the Singleton pattern to ensure a single instance.
     """
+
     _instance: Optional["ConfigManager"] = None
     _config: Dict[str, Any] = {}
     _initialized: bool = False
@@ -56,10 +60,14 @@ class ConfigManager:
             # Access the nested dictionary e.g., [llm.ollama_llama3]
             config_dict = self._config["llm"][name]
         except KeyError:
-            raise KeyError(f"LLM configuration for '{name}' not found in the config file.")
+            raise KeyError(
+                f"LLM configuration for '{name}' not found in the config file."
+            )
 
         if "provider" not in config_dict:
-            raise ValueError(f"LLM configuration for '{name}' must include a 'provider' key.")
+            raise ValueError(
+                f"LLM configuration for '{name}' must include a 'provider' key."
+            )
 
         return LLMConfig(
             provider=config_dict.get("provider"),

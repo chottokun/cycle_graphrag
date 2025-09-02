@@ -9,6 +9,12 @@ dependencies = [
     "langchain-ollama",
     "langchain-openai", # For future Azure support
     "tomli", # For reading TOML config files
+    "langchain-neo4j",
+    "neo4j",
+    "unstructured",
+    "markdown",
+    "tiktoken",
+    "langchain-experimental",
 ]
 
 [project.optional-dependencies]

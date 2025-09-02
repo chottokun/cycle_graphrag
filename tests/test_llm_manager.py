@@ -1,10 +1,8 @@
 import pytest
-from unittest.mock import patch
 
 from rss_mcp.llm_manager import LLMManager
 from rss_mcp.config_manager import ConfigManager
-from langchain_ollama import ChatOllama
-from langchain_openai import AzureChatOpenAI
+
 
 @pytest.fixture(autouse=True)
 def reset_singletons():
@@ -12,11 +10,13 @@ def reset_singletons():
     ConfigManager._reset_for_testing()
     LLMManager._reset_for_testing()
 
+
 def test_llm_manager_is_singleton():
     """Tests that LLMManager follows the singleton pattern."""
     manager1 = LLMManager()
     manager2 = LLMManager()
     assert manager1 is manager2
+
 
 def test_get_default_llm_returns_ollama(mocker):
     """Tests that the default LLM is loaded correctly (Ollama)."""
@@ -28,11 +28,11 @@ def test_get_default_llm_returns_ollama(mocker):
 
     # Check that ChatOllama was called once with the correct parameters
     mock_chat_ollama.assert_called_once_with(
-        model="llama3",
-        base_url="http://localhost:11434"
+        model="llama3", base_url="http://localhost:11434"
     )
     # Check that the returned instance is the one created by the mock
     assert llm_instance == mock_chat_ollama.return_value
+
 
 def test_get_named_llm_returns_ollama(mocker):
     """Tests getting a specifically named Ollama LLM."""
@@ -42,9 +42,9 @@ def test_get_named_llm_returns_ollama(mocker):
     manager.get_llm("ollama_llama3")
 
     mock_chat_ollama.assert_called_once_with(
-        model="llama3",
-        base_url="http://localhost:11434"
+        model="llama3", base_url="http://localhost:11434"
     )
+
 
 def test_llm_instances_are_cached(mocker):
     """Tests that LLM instances are cached and not recreated."""
@@ -58,12 +58,14 @@ def test_llm_instances_are_cached(mocker):
     mock_chat_ollama.assert_called_once()
     assert instance1 is instance2
 
+
 def test_get_unsupported_provider_raises_error(mocker):
     """Tests that a ValueError is raised for an unsupported provider (azure)."""
     # We don't need to mock anything for this, as it should fail before instantiation
     manager = LLMManager()
     with pytest.raises(ValueError, match="Unsupported LLM provider: azure"):
         manager.get_llm("azure_gpt4")
+
 
 def test_get_non_existent_llm_raises_error():
     """Tests that a KeyError is raised for a non-existent LLM."""
