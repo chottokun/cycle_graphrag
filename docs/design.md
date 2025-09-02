@@ -119,3 +119,32 @@ converter = GraphConverter()
 # チャンクをグラフドキュメントに変換
 graph_documents = converter.convert_to_graph(chunks)
 ```
+
+---
+
+## 6. グラフデータベース格納
+
+生成された `GraphDocument` オブジェクトを永続化するため、Neo4jデータベースに格納する。この責務を担うのが `GraphStore` である。
+
+### 6.1. `GraphStore`
+
+- **目的**: Neo4jデータベースへの接続を管理し、グラフドキュメントの書き込みを行う。
+- **依存関係**: `ConfigManager` からNeo4jの接続情報（URI, ユーザ名, パスワード）を取得する。
+- **主要メソッド**:
+    - `__init__()`: `ConfigManager` から設定を読み込み、`langchain_community.graphs.Neo4jGraph` のインスタンスを初期化して保持する。
+    - `save_graph(graph_documents: List[GraphDocument])`:
+        -   引数で `GraphDocument` のリストを受け取る。
+        -   保持している `Neo4jGraph` インスタンスの `add_graph_documents` メソッドを呼び出して、データをデータベースに書き込む。
+
+### 6.2. 利用例
+
+```python
+from rss_mcp.graph_store import GraphStore
+
+# GraphStoreを初期化
+# (内部でConfigManagerからDB設定を読み込む)
+graph_store = GraphStore()
+
+# グラフドキュメントをDBに保存
+graph_store.save_graph(graph_documents)
+```

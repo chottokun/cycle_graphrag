@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, mock_open
 
 # The import now target the classes, not an instance
-from rss_mcp.config_manager import ConfigManager, LLMConfig
+from rss_mcp.config_manager import ConfigManager, LLMConfig, Neo4jConfig
 
 # Define the path to the config file relative to the project root
 CONFIG_FILE_PATH = "config.toml"
@@ -66,3 +66,13 @@ model_name = "test"
         manager = ConfigManager(config_path="any/mocked/path.toml")
         with pytest.raises(ValueError, match="provider"):
             manager.get_llm_config("bad_llm")
+
+
+def test_get_neo4j_config_success():
+    """Tests retrieving the Neo4j database configuration."""
+    manager = ConfigManager(config_path=CONFIG_FILE_PATH)
+    config = manager.get_neo4j_config()
+    assert isinstance(config, Neo4jConfig)
+    assert config.uri == "bolt://localhost:7687"
+    assert config.username == "neo4j"
+    assert config.password == "password"

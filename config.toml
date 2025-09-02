@@ -12,3 +12,8 @@ provider = "azure"
 model_name = "gpt-4o"
 # Intended to be loaded from environment variables like
 # AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT
+
+[database.neo4j]
+uri = "bolt://localhost:7687"
+username = "neo4j"
+password = "password" # For local dev; use env vars in production

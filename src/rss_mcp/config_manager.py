@@ -14,6 +14,15 @@ class LLMConfig:
     api_key: Optional[str] = None
 
 
+@dataclass
+class Neo4jConfig:
+    """Dataclass to hold Neo4j connection configuration."""
+
+    uri: str
+    username: str
+    password: str
+
+
 class ConfigManager:
     """
     Manages loading and accessing configuration from a TOML file.
@@ -74,6 +83,21 @@ class ConfigManager:
             model_name=config_dict.get("model_name"),
             base_url=config_dict.get("base_url"),
             api_key=config_dict.get("api_key"),
+        )
+
+    def get_neo4j_config(self) -> Neo4jConfig:
+        """
+        Returns the configuration for the Neo4j database.
+        """
+        try:
+            config_dict = self._config["database"]["neo4j"]
+        except KeyError:
+            raise KeyError("Neo4j configuration ('database.neo4j') not found.")
+
+        return Neo4jConfig(
+            uri=config_dict.get("uri"),
+            username=config_dict.get("username"),
+            password=config_dict.get("password"),
         )
 
     @classmethod
