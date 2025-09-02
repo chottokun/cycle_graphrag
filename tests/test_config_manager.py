@@ -76,3 +76,9 @@ def test_get_neo4j_config_success():
     assert config.uri == "bolt://localhost:7687"
     assert config.username == "neo4j"
     assert config.password == "password"
+
+
+def test_get_embedding_model_name():
+    """Tests retrieving the embedding model name from the config."""
+    manager = ConfigManager(config_path=CONFIG_FILE_PATH)
+    assert manager.get_embedding_model_name() == "all-MiniLM-L6-v2"

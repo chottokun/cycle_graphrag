@@ -135,6 +135,10 @@ graph_documents = converter.convert_to_graph(chunks)
     - `save_graph(graph_documents: List[GraphDocument])`:
         -   引数で `GraphDocument` のリストを受け取る。
         -   保持している `Neo4jGraph` インスタンスの `add_graph_documents` メソッドを呼び出して、データをデータベースに書き込む。
+    - `create_vector_index()`:
+        -   `EmbeddingManager` を利用して、Embeddingモデルをロードする。
+        -   Neo4jの各`Chunk`ノードに対して、その`text`プロパティからベクトル埋め込み（Embedding）を生成し、`embedding`プロパティとして設定する。
+        -   `embedding`プロパティに対するベクトルインデックスをNeo4jデータベース上に作成する。これにより、高速な類似度検索が可能になる。
 
 ### 6.2. 利用例
 
@@ -147,26 +151,43 @@ graph_store = GraphStore()
 
 # グラフドキュメントをDBに保存
 graph_store.save_graph(graph_documents)
+
+# ベクトルインデックスを作成
+graph_store.create_vector_index()
 ```
 
 ---
 
-## 7. 対話型GraphRAG
+## 7. Embedding管理
 
-格納されたナレッジグラフに対し、自然言語で対話を行うためのエージェントを実装する。
+### 7.1. `EmbeddingManager`
 
-### 7.1. `GraphRAGAgent`
+- **目的**: HuggingFaceの`sentence-transformers`モデルをロードし、アプリケーション全体で共有するための管理クラス。
+- **設計パターン**: シングルトンパターンを採用。
+- **主要メソッド**:
+    - `get_model()`: `HuggingFaceEmbeddings`のインスタンスを返す。モデル名は`config.toml`から読み込む。
 
-- **目的**: ユーザーからの質問を解釈し、Neo4jグラフに対してCypherクエリを生成・実行し、得られた結果を基に回答を生成する。
-- **依存関係**:
-    - `LLMManager`: クエリ生成と最終的な回答生成のためのLLMインスタンスを取得する。
-    - `GraphStore`: クエリ対象となるNeo4jグラフへの接続ハンドル (`Neo4jGraph`インスタンス) を取得する。
+---
+
+## 8. 対話型GraphRAG（ハイブリッド検索）
+
+格納されたナレッジグラフに対し、ベクトル検索とグラフ検索を組み合わせたハイブリッドなアプローチで対話を行う。
+
+### 8.1. `GraphRAGAgent`
+
+- **目的**: ユーザーからの質問に対し、最適な検索戦略（ベクトル検索、グラフ検索）を組み合わせて実行し、精度の高い回答を生成する。
+- **検索フロー**:
+    1.  **ベクトル検索**: ユーザーの質問をベクトル化し、Neo4jのベクトルインデックスを使って関連性の高い`Chunk`ノードを検索する。
+    2.  **グラフ検索**: 1で見つかった`Chunk`ノードの周辺にあるエンティティや、質問に含まれるキーワードを基に、グラフを走査（Cypherクエリ）して関連情報を収集する。
+    3.  **情報統合と回答生成**: ベクトル検索とグラフ検索で得られた両方のコンテキストを統合し、LLMに渡して最終的な回答を生成する。
 - **主要コンポーネント**:
-    - 内部で`langchain.chains.graph_qa.cypher.GraphCypherQAChain`を利用する。このチェーンが、自然言語からCypherへの変換、クエリ実行、結果の解釈、回答生成までの一連の流れをカプセル化する。
+    - `langchain_community.vectorstores.Neo4jVector` をリトリーバーとして利用。
+    - `GraphCypherQAChain` またはカスタムのCypher生成チェーンを利用。
+    - LangChain Expression Language (LCEL) を用いて、上記のコンポーネントを組み合わせたカスタムチェーンを構築する。
 - **主要メソッド**:
     - `query(question: str) -> str`:
         -   引数でユーザーの質問を受け取る。
-        -   内部で保持している`GraphCypherQAChain`インスタンスを実行し、最終的な回答文字列を返す。
+        -   内部で構築したハイブリッド検索チェーンを実行し、最終的な回答文字列を返す。
 
 ### 7.2. 利用例
 

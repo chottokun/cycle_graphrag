@@ -16,6 +16,8 @@ dependencies = [
     "tiktoken",
     "langchain-experimental",
     "streamlit",
+    "sentence-transformers",
+    "langchain-huggingface",
 ]
 
 [project.optional-dependencies]

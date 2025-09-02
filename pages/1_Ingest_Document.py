@@ -25,15 +25,19 @@ def ingest_document(file_path: str):
         chunks = doc_processor.process_file(file_path)
         st.success(f"Document processed into {len(chunks)} chunks.")
 
-    with st.spinner("Step 2/3: Converting chunks to graph documents..."):
+    with st.spinner("Step 2/4: Converting chunks to graph documents..."):
         graph_converter = GraphConverter()
         graph_documents = graph_converter.convert_to_graph(chunks)
         st.success(f"Converted chunks to {len(graph_documents)} graph documents.")
 
-    with st.spinner("Step 3/3: Storing graph in Neo4j..."):
+    with st.spinner("Step 3/4: Storing graph in Neo4j..."):
         graph_store = GraphStore()
         graph_store.save_graph(graph_documents)
         st.success("Graph stored successfully in Neo4j!")
+
+    with st.spinner("Step 4/4: Creating vector index for fast search..."):
+        graph_store.create_vector_index()
+        st.success("Vector index created successfully!")
 
 
 # --- Streamlit Page ---

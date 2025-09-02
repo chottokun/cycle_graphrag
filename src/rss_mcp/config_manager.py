@@ -100,6 +100,16 @@ class ConfigManager:
             password=config_dict.get("password"),
         )
 
+    def get_embedding_model_name(self) -> str:
+        """Returns the name of the embedding model specified in the config."""
+        try:
+            model_name = self._config["embedding"]["model_name"]
+        except KeyError:
+            raise KeyError(
+                "Embedding model name not found in config ('embedding.model_name')."
+            )
+        return model_name
+
     @classmethod
     def _reset_for_testing(cls):
         """Resets the singleton instance and its initialized state. For testing only."""

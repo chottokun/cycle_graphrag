@@ -46,11 +46,16 @@ def main():
     print(f"Successfully converted chunks to {len(graph_documents)} graph documents.")
 
     # 3. Store in Neo4j
-    print("\n[Step 3/3] Storing graph in Neo4j...")
+    print("\n[Step 3/4] Storing graph in Neo4j...")
     try:
         graph_store = GraphStore()
         graph_store.save_graph(graph_documents)
         print("Successfully stored graph in Neo4j.")
+
+        # 4. Create Vector Index
+        print("\n[Step 4/4] Creating vector index...")
+        graph_store.create_vector_index()
+
     except Exception as e:
         print("\n--- ERROR ---")
         print("Failed to connect to or store data in Neo4j.")

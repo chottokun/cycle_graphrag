@@ -13,6 +13,9 @@ model_name = "gpt-4o"
 # Intended to be loaded from environment variables like
 # AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT
 
+[embedding]
+model_name = "all-MiniLM-L6-v2"
+
 [database.neo4j]
 uri = "bolt://localhost:7687"
 username = "neo4j"
