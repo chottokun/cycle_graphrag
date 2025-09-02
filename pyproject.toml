@@ -15,6 +15,7 @@ dependencies = [
     "markdown",
     "tiktoken",
     "langchain-experimental",
+    "streamlit",
 ]
 
 [project.optional-dependencies]
