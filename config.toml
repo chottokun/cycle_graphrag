@@ -1,0 +1,14 @@
+# Default LLM to use
+default_llm = "ollama_llama3"
+
+# LLM provider settings
+[llm.ollama_llama3]
+provider = "ollama"
+model_name = "llama3"
+base_url = "http://localhost:11434"
+
+[llm.azure_gpt4]
+provider = "azure"
+model_name = "gpt-4o"
+# Intended to be loaded from environment variables like
+# AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT
