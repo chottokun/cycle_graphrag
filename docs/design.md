@@ -148,3 +148,37 @@ graph_store = GraphStore()
 # グラフドキュメントをDBに保存
 graph_store.save_graph(graph_documents)
 ```
+
+---
+
+## 7. 対話型GraphRAG
+
+格納されたナレッジグラフに対し、自然言語で対話を行うためのエージェントを実装する。
+
+### 7.1. `GraphRAGAgent`
+
+- **目的**: ユーザーからの質問を解釈し、Neo4jグラフに対してCypherクエリを生成・実行し、得られた結果を基に回答を生成する。
+- **依存関係**:
+    - `LLMManager`: クエリ生成と最終的な回答生成のためのLLMインスタンスを取得する。
+    - `GraphStore`: クエリ対象となるNeo4jグラフへの接続ハンドル (`Neo4jGraph`インスタンス) を取得する。
+- **主要コンポーネント**:
+    - 内部で`langchain.chains.graph_qa.cypher.GraphCypherQAChain`を利用する。このチェーンが、自然言語からCypherへの変換、クエリ実行、結果の解釈、回答生成までの一連の流れをカプセル化する。
+- **主要メソッド**:
+    - `query(question: str) -> str`:
+        -   引数でユーザーの質問を受け取る。
+        -   内部で保持している`GraphCypherQAChain`インスタンスを実行し、最終的な回答文字列を返す。
+
+### 7.2. 利用例
+
+```python
+from rss_mcp.graph_rag_agent import GraphRAGAgent
+
+# エージェントを初期化
+# (内部でLLMManagerとGraphStoreが利用される)
+agent = GraphRAGAgent()
+
+# 質問して回答を得る
+question = "Who is Jules?"
+answer = agent.query(question)
+print(answer)
+```
