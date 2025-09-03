@@ -58,3 +58,67 @@ class GraphStore:
             embedding_node_property="embedding",
         )
         print("Vector index creation/update complete.")
+
+    def get_graph_for_visualization(self):
+        """
+        Fetches all nodes and relationships from the graph and formats them
+        for visualization with pyvis.
+        """
+        print("Fetching graph data for visualization...")
+        query = """
+        MATCH (n)
+        OPTIONAL MATCH (n)-[r]->(m)
+        RETURN
+            collect(DISTINCT {
+                id: elementId(n),
+                labels: labels(n),
+                properties: properties(n)
+            }) AS nodes,
+            collect(DISTINCT {
+                source_id: elementId(startNode(r)),
+                target_id: elementId(endNode(r)),
+                type: type(r),
+                properties: properties(r)
+            }) AS relationships
+        """
+        raw_result = self.graph.query(query)
+
+        # The query returns a list with one element which is a dict
+        if not raw_result or not raw_result[0]:
+            return [], []
+
+        data = raw_result[0]
+        nodes = []
+        edges = []
+
+        for node_data in data.get("nodes", []):
+            # Use 'name' or first property as label, fallback to ID
+            label = node_data["properties"].get("name", node_data["id"])
+            title = f"Labels: {', '.join(node_data['labels'])}\n"
+            title += "\n".join(
+                [f"{k}: {v}" for k, v in node_data["properties"].items()]
+            )
+
+            nodes.append(
+                {
+                    "id": node_data["id"],
+                    "label": str(label),
+                    "title": title,
+                    "group": node_data["labels"][0]
+                    if node_data["labels"]
+                    else "Unknown",
+                }
+            )
+
+        for edge_data in data.get("relationships", []):
+            if edge_data.get("source_id") and edge_data.get("target_id"):
+                edges.append(
+                    {
+                        "source": edge_data["source_id"],
+                        "to": edge_data["target_id"],
+                        "label": edge_data["type"],
+                    }
+                )
+
+        print(f"Fetched {len(nodes)} nodes and {len(edges)} edges.")
+        return nodes, edges

@@ -18,6 +18,8 @@ dependencies = [
     "streamlit",
     "sentence-transformers",
     "langchain-huggingface",
+    "streamlit-agraph",
+    "pyvis",
 ]
 
 [project.optional-dependencies]

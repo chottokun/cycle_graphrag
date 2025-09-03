@@ -203,3 +203,26 @@ question = "Who is Jules?"
 answer = agent.query(question)
 print(answer)
 ```
+
+---
+
+## 9. グラフ可視化
+
+Neo4jに格納されているナレッジグラフ全体を、インタラクティブに可視化する機能。
+
+### 9.1. `GraphStore`の拡張
+
+- **目的**: 可視化ライブラリ(`pyvis`)が扱いやすい形式で、グラフのノードとエッジの一覧を取得する。
+- **主要メソッド**:
+    - `get_graph_for_visualization() -> Tuple[List[Dict], List[Dict]]`:
+        -   Neo4jからすべてのノードとリレーションシップを取得するCypherクエリを実行する。
+        -   結果を、ノードのリストとエッジのリストに整形して返す。各ノード/エッジは`pyvis`が必要とする形式の辞書。
+
+### 9.2. Streamlit可視化ページ
+
+- **ファイル**: `pages/3_Visualize_Graph.py`
+- **機能**:
+    - `GraphStore`の`get_graph_for_visualization`を呼び出してグラフデータを取得する。
+    - 取得したデータを用いて`pyvis.network.Network`オブジェクトを構築する。
+    - `streamlit_agraph.agraph`関数に`pyvis`オブジェクトを渡し、Streamlitページ内にグラフを描画する。
+    - （将来的な拡張）UI上に、表示するノードのラベルやリレーションのタイプをフィルタリングする機能を追加する。

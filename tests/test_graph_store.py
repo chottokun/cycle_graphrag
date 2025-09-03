@@ -106,3 +106,48 @@ def test_create_vector_index(mocker, mock_dependencies):
         text_node_properties=["text"],
         embedding_node_property="embedding",
     )
+
+
+def test_get_graph_for_visualization(mock_dependencies):
+    """Tests that the graph store can fetch and format data for visualization."""
+    # Arrange
+    graph_store = GraphStore()
+    mock_graph = mock_dependencies["neo4j_graph_instance"]
+
+    # Sample raw data returned by graph.query. It's a single row/dict.
+    mock_query_result = [
+        {
+            "nodes": [
+                {"id": "n1", "labels": ["Person"], "properties": {"name": "Jules"}},
+                {"id": "n2", "labels": ["Project"], "properties": {"name": "rss_mcp"}},
+            ],
+            "relationships": [
+                {
+                    "source_id": "n1",
+                    "target_id": "n2",
+                    "type": "WORKS_ON",
+                    "properties": {},
+                }
+            ],
+        }
+    ]
+    mock_graph.query.return_value = mock_query_result
+
+    # Act
+    nodes, edges = graph_store.get_graph_for_visualization()
+
+    # Assert
+    mock_graph.query.assert_called_once()
+
+    # Check nodes formatting
+    assert len(nodes) == 2
+    assert nodes[0]["id"] == "n1"
+    assert nodes[0]["label"] == "Jules"
+    assert nodes[0]["title"] == "Labels: Person\nname: Jules"
+    assert nodes[1]["id"] == "n2"
+
+    # Check edges formatting
+    assert len(edges) == 1
+    assert edges[0]["source"] == "n1"
+    assert edges[0]["to"] == "n2"
+    assert edges[0]["label"] == "WORKS_ON"
