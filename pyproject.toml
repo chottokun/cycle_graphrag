@@ -20,6 +20,7 @@ dependencies = [
     "langchain-huggingface",
     "streamlit-agraph",
     "pyvis",
+    "ragas",
 ]
 
 [project.optional-dependencies]
