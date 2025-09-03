@@ -36,3 +36,10 @@ class EmbeddingManager:
             print("Embedding model initialized.")
 
         return self._model
+
+    @classmethod
+    def _reset_for_testing(cls):
+        """Resets the singleton instance and its state for testing."""
+        cls._instance = None
+        cls._model = None
+        cls._initialized = False

@@ -58,7 +58,10 @@ model_name = "gpt-4o"
 `LLMManager` を通じて、以下のように簡単にLLMインスタンスを取得できる。
 
 ```python
-from rss_mcp.llm_manager import llm_manager
+from rss_mcp.llm_manager import LLMManager
+
+# Managerのインスタンスを取得（シングルトン）
+llm_manager = LLMManager()
 
 # デフォルトのLLM (ollama_llama3) を取得
 ollama_llm = llm_manager.get_llm()

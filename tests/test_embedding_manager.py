@@ -1,9 +1,12 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-# This import will fail initially
 from rss_mcp.embedding_manager import EmbeddingManager
 
+@pytest.fixture(autouse=True)
+def reset_singleton():
+    """Fixture to reset the singleton instance before each test."""
+    EmbeddingManager._reset_for_testing()
 
 @pytest.fixture
 def mock_dependencies(mocker):
@@ -11,31 +14,26 @@ def mock_dependencies(mocker):
     # Mock ConfigManager
     mock_config_manager_instance = MagicMock()
     mock_config_manager_instance.get_embedding_model_name.return_value = "test-model"
-    mocker.patch(
-        "rss_mcp.embedding_manager.ConfigManager",
-        return_value=mock_config_manager_instance,
-    )
+    mocker.patch("rss_mcp.embedding_manager.ConfigManager", return_value=mock_config_manager_instance)
 
     # Mock HuggingFaceEmbeddings
     mock_hf_embeddings_instance = MagicMock()
     mock_hf_embeddings_class = mocker.patch(
         "rss_mcp.embedding_manager.HuggingFaceEmbeddings",
-        return_value=mock_hf_embeddings_instance,
+        return_value=mock_hf_embeddings_instance
     )
 
     return {
         "config_manager_instance": mock_config_manager_instance,
         "hf_embeddings_class": mock_hf_embeddings_class,
-        "hf_embeddings_instance": mock_hf_embeddings_instance,
+        "hf_embeddings_instance": mock_hf_embeddings_instance
     }
-
 
 def test_embedding_manager_is_singleton(mock_dependencies):
     """Tests that EmbeddingManager is a singleton."""
     manager1 = EmbeddingManager()
     manager2 = EmbeddingManager()
     assert manager1 is manager2
-
 
 def test_get_model_initializes_and_caches_model(mock_dependencies):
     """Tests that get_model initializes and returns the correct model."""

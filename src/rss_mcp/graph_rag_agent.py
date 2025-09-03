@@ -56,15 +56,17 @@ class GraphRAGAgent:
             """
         )
 
+        # This LCEL chain is constructed to perform a hybrid search.
+        # 1. It first retrieves context in parallel from the vector store and the graph store.
+        # 2. It then uses the combined context to generate a final answer.
+        # 3. Finally, it runs a parallel step to package the final answer and the
+        #    intermediate graph context into a single dictionary for the UI.
+
         # 1. A chain that retrieves parallel contexts
         retrieval_chain = RunnableParallel(
-            {
-                "vector_context": lambda x: vector_retriever.invoke(x["question"]),
-                "graph_context_full": lambda x: cypher_chain.invoke(
-                    {"query": x["question"]}
-                ),
-                "question": lambda x: x["question"],
-            }
+            vector_context=lambda x: vector_retriever.invoke(x["question"]),
+            graph_context_full=lambda x: cypher_chain.invoke({"query": x["question"]}),
+            question=lambda x: x["question"],
         )
 
         # 2. The final chain that uses the retrieved context to generate an answer
@@ -79,12 +81,10 @@ class GraphRAGAgent:
 
         # 3. The final parallel chain to produce the desired output format
         self.chain = retrieval_chain | RunnableParallel(
-            {
-                "answer": answer_generation_chain,
-                "context": lambda x: x["graph_context_full"]["intermediate_steps"][0][
-                    "context"
-                ],
-            }
+            answer=answer_generation_chain,
+            context=lambda x: x["graph_context_full"]["intermediate_steps"][0][
+                "context"
+            ],
         )
 
     def query(self, question: str) -> dict:
