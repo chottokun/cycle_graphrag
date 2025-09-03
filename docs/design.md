@@ -185,23 +185,32 @@ graph_store.create_vector_index()
     - `GraphCypherQAChain` またはカスタムのCypher生成チェーンを利用。
     - LangChain Expression Language (LCEL) を用いて、上記のコンポーネントを組み合わせたカスタムチェーンを構築する。
 - **主要メソッド**:
-    - `query(question: str) -> str`:
+    - `query(question: str) -> dict`:
         -   引数でユーザーの質問を受け取る。
-        -   内部で構築したハイブリッド検索チェーンを実行し、最終的な回答文字列を返す。
+        -   内部で構築したハイブリッド検索チェーンを実行する。
+        -   チェーンの実行結果から、最終的な回答テキストと、回答の根拠となった中間コンテキスト（Cypherクエリの結果など）を抽出する。
+        -   `{"answer": str, "context": List[Dict]}` という形式の辞書を返す。`context`はノードとエッジの情報のリスト。
 
-### 7.2. 利用例
+### 8.2. Streamlit UIでの根拠提示
+
+- チャットUI (`pages/2_Chat_with_Graph.py`) は、エージェントから返された辞書を受け取る。
+- `answer`キーの値をテキスト回答として表示する。
+- `context`キーにデータが存在する場合、そのデータを用いて`streamlit-agraph`で小さなサブグラフを描画し、回答のすぐ下に表示する。これにより、ユーザーはどの情報が回答の根拠になったかを視覚的に確認できる。
+
+### 8.3. 利用例
 
 ```python
 from rss_mcp.graph_rag_agent import GraphRAGAgent
 
 # エージェントを初期化
-# (内部でLLMManagerとGraphStoreが利用される)
 agent = GraphRAGAgent()
 
-# 質問して回答を得る
+# 質問して回答とコンテキストを得る
 question = "Who is Jules?"
-answer = agent.query(question)
-print(answer)
+response = agent.query(question)
+
+print(f"Answer: {response['answer']}")
+# response['context'] を使ってグラフを可視化する
 ```
 
 ---

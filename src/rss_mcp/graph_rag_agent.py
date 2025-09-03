@@ -1,9 +1,11 @@
 from langchain.chains import GraphCypherQAChain
 from langchain_community.vectorstores import Neo4jVector
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import (
+    RunnableParallel,
+    RunnablePassthrough,
+)
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-
 
 from .llm_manager import LLMManager
 from .graph_store import GraphStore
@@ -23,13 +25,10 @@ class GraphRAGAgent:
         graph_store = GraphStore()
         embedding_manager = EmbeddingManager()
 
-        self.graph = graph_store.graph
-        self.llm = llm_manager.get_llm()
-        self.embedding_model = embedding_manager.get_model()
+        llm = llm_manager.get_llm()
 
-        # Initialize the vector store for semantic search
-        self.vector_store = Neo4jVector(
-            embedding=self.embedding_model,
+        vector_store = Neo4jVector(
+            embedding=embedding_manager.get_model(),
             url=graph_store.neo4j_config.uri,
             username=graph_store.neo4j_config.username,
             password=graph_store.neo4j_config.password,
@@ -38,55 +37,65 @@ class GraphRAGAgent:
             text_node_properties=["text"],
             embedding_node_property="embedding",
         )
-        self.vector_retriever = self.vector_store.as_retriever()
+        vector_retriever = vector_store.as_retriever()
 
-        # Initialize the graph-based QA chain for structured queries
-        self.cypher_chain = GraphCypherQAChain.from_llm(
-            graph=self.graph, llm=self.llm, verbose=True
+        cypher_chain = GraphCypherQAChain.from_llm(
+            graph=graph_store.graph,
+            llm=llm,
+            verbose=True,
+            return_intermediate_steps=True,
         )
 
-        # Define the final prompt template to combine contexts
-        self.final_prompt = PromptTemplate.from_template(
+        final_prompt = PromptTemplate.from_template(
             """
             You are a helpful assistant. Based on the following context from a knowledge graph and a vector search, answer the user's question.
-            The vector search provides general context, while the graph search provides specific, structured information.
-            Use the graph context primarily for specific facts and relationships, and the vector context for broader understanding.
-
-            Vector Search Context:
-            {vector_context}
-
-            Graph Search Context:
-            {graph_context}
-
-            Question:
-            {question}
-
+            Vector Search Context: {vector_context}
+            Graph Search Context: {graph_context}
+            Question: {question}
             Answer:
             """
         )
 
-        # Build the final combined chain using LCEL
-        self.chain = (
-            RunnablePassthrough.assign(
-                vector_context=lambda x: self.vector_retriever.invoke(x["question"]),
-                graph_context=lambda x: self.cypher_chain.invoke(
+        # 1. A chain that retrieves parallel contexts
+        retrieval_chain = RunnableParallel(
+            {
+                "vector_context": lambda x: vector_retriever.invoke(x["question"]),
+                "graph_context_full": lambda x: cypher_chain.invoke(
                     {"query": x["question"]}
-                )["result"],
+                ),
+                "question": lambda x: x["question"],
+            }
+        )
+
+        # 2. The final chain that uses the retrieved context to generate an answer
+        answer_generation_chain = (
+            RunnablePassthrough.assign(
+                graph_context=lambda x: x["graph_context_full"]["result"]
             )
-            | self.final_prompt
-            | self.llm
+            | final_prompt
+            | llm
             | StrOutputParser()
         )
 
-    def query(self, question: str) -> str:
+        # 3. The final parallel chain to produce the desired output format
+        self.chain = retrieval_chain | RunnableParallel(
+            {
+                "answer": answer_generation_chain,
+                "context": lambda x: x["graph_context_full"]["intermediate_steps"][0][
+                    "context"
+                ],
+            }
+        )
+
+    def query(self, question: str) -> dict:
         """
-        Asks a question using the hybrid RAG chain and returns the answer.
+        Asks a question using the hybrid RAG chain and returns the answer and context.
 
         Args:
             question: The question to ask.
 
         Returns:
-            The answer from the RAG agent.
+            A dictionary containing the 'answer' and the 'context'.
         """
         print(f"Querying with hybrid RAG approach: '{question}'")
         return self.chain.invoke({"question": question})
