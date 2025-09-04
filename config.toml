@@ -1,0 +1,23 @@
+# Default LLM to use
+default_llm = "ollama_llama3"
+
+# LLM provider settings
+[llm.ollama_llama3]
+provider = "ollama"
+model_name = "llama3"
+base_url = "http://localhost:11434"
+
+[llm.azure_gpt4]
+provider = "azure"
+model_name = "gpt-4o" # This corresponds to the Azure "Deployment name"
+# Other details like api_key, endpoint, and api_version are loaded
+# automatically from environment variables by LangChain.
+# See .env.example for required variables.
+
+[embedding]
+model_name = "all-MiniLM-L6-v2"
+
+[database.neo4j]
+uri = "bolt://localhost:7687"
+username = "neo4j"
+password = "password" # For local dev; use env vars in production

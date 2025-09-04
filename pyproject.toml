@@ -1,0 +1,35 @@
+[project]
+name = "rss_mcp"
+version = "0.1.0"
+description = "A knowledge graph RAG system using LLM."
+requires-python = ">=3.9"
+dependencies = [
+    "langchain-core",
+    "langchain-community",
+    "langchain-ollama",
+    "langchain-openai", # For future Azure support
+    "tomli", # For reading TOML config files
+    "langchain-neo4j",
+    "neo4j",
+    "unstructured",
+    "markdown",
+    "tiktoken",
+    "langchain-experimental",
+    "streamlit",
+    "sentence-transformers",
+    "langchain-huggingface",
+    "streamlit-agraph",
+    "pyvis",
+    "ragas",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-mock",
+    "ruff",
+    "mypy"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
